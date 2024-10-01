@@ -18,6 +18,21 @@ import java.util.Set;
 public class NthMaxNumberService {
     public Integer findNthMaxNumber(String filePath, int n) {
         Queue<Integer> minHeap = new PriorityQueue<>(n);
+        Set<Integer> numbers = readNumbersFromFile(filePath);
+
+        for (Integer number : numbers) {
+            if (minHeap.size() < n) {
+                minHeap.offer(number);
+            } else if (number > minHeap.peek()) {
+                minHeap.poll();
+                minHeap.offer(number);
+            }
+        }
+
+        return minHeap.size() == n ? minHeap.peek() : null;
+    }
+
+    protected Set<Integer> readNumbersFromFile(String filePath) {
         Set<Integer> uniqueNumbers = new HashSet<>();
 
         try (FileInputStream fis = new FileInputStream(filePath);
@@ -26,21 +41,14 @@ public class NthMaxNumberService {
             Sheet sheet = workbook.getSheetAt(0);
             for (Row row : sheet) {
                 int number = (int) row.getCell(0).getNumericCellValue();
-                if (uniqueNumbers.add(number)) {
-                    if (minHeap.size() < n) {
-                        minHeap.offer(number);
-                    } else if (number > minHeap.peek()) {
-                        minHeap.poll();
-                        minHeap.offer(number);
-                    }
-                }
+                uniqueNumbers.add(number);
             }
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("File not found: " + filePath, e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error reading file: " + filePath, e);
         }
 
-        return minHeap.size() == n ? minHeap.peek() : null;
+        return uniqueNumbers;
     }
 }
